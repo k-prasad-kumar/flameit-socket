@@ -15,12 +15,12 @@ const io = new Server(server, {
   },
 });
 
-const userSocketMap: { [key: string]: string } = {};
+const userSocketMap = {};
 
 io.on("connection", (socket) => {
-  const userId = socket.handshake.query.userId as string;
+  const userId = socket.handshake.query.userId;
   if (userId) {
-    userSocketMap[userId as string] = socket.id;
+    userSocketMap[userId] = socket.id;
     console.log("a user connected", userId, socket.id);
   }
 
@@ -28,7 +28,7 @@ io.on("connection", (socket) => {
   io.emit("online-users", Object.keys(userSocketMap));
 
   socket.on("online-users", (userId) => {
-    const receiverSocketId = userSocketMap[userId as string];
+    const receiverSocketId = userSocketMap[userId];
 
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("online-users", Object.keys(userSocketMap));
@@ -36,8 +36,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("typing", (data) => {
-    data.forEach((p: string) => {
-      const receiverSocketId = userSocketMap[p as string];
+    data.forEach((p) => {
+      const receiverSocketId = userSocketMap[p];
       if (receiverSocketId) {
         socket.to(receiverSocketId).emit("typing", true);
       }
@@ -45,8 +45,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("stopTyping", (data) => {
-    data.forEach((p: string) => {
-      const receiverSocketId = userSocketMap[p as string];
+    data.forEach((p) => {
+      const receiverSocketId = userSocketMap[p];
       if (receiverSocketId) {
         socket.to(receiverSocketId).emit("stopTyping", false);
       }
@@ -54,25 +54,21 @@ io.on("connection", (socket) => {
   });
 
   socket.on("newMessage", (data) => {
-    const participants = data.conversationParticipants?.filter(
-      (p: { userId: string; username: string; image: string }) => {
-        return p.userId !== data.senderId;
-      }
-    );
+    const participants = data.conversationParticipants?.filter((p) => {
+      return p.userId !== data.senderId;
+    });
 
-    participants.forEach(
-      (p: { userId: string; username: string; image: string }) => {
-        const receiverSocketId = userSocketMap[p.userId as string];
-        if (receiverSocketId) {
-          socket.to(receiverSocketId).emit("newMessage", data);
-        }
+    participants.forEach((p) => {
+      const receiverSocketId = userSocketMap[p.userId];
+      if (receiverSocketId) {
+        socket.to(receiverSocketId).emit("newMessage", data);
       }
-    );
+    });
   });
 
   socket.on("notification", (data) => {
-    data?.recivers?.forEach((userId: string) => {
-      const receiverSocketId = userSocketMap[userId as string];
+    data?.recivers?.forEach((userId) => {
+      const receiverSocketId = userSocketMap[userId];
       if (receiverSocketId) {
         socket.to(receiverSocketId).emit("notification", data);
       }
@@ -81,7 +77,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     if (userId) {
-      delete userSocketMap[userId as string];
+      delete userSocketMap[userId];
     }
 
     // Emit online users after updating the map
