@@ -75,6 +75,24 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("reactionUpdated", (data) => {
+    const participants = data.conversationParticipants?.filter((p) => {
+      return p.userId !== data.senderId;
+    });
+
+    participants.forEach((p) => {
+      const receiverSocketId = userSocketMap[p.userId];
+      if (receiverSocketId) {
+        socket
+          .to(receiverSocketId)
+          .emit("reactionUpdated", {
+            messageId: data?.messageId,
+            updatedReactions: data?.updatedReactions,
+          });
+      }
+    });
+  });
+
   socket.on("disconnect", () => {
     if (userId) {
       delete userSocketMap[userId];
