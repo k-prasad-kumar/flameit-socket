@@ -36,19 +36,19 @@ io.on("connection", (socket) => {
   });
 
   socket.on("typing", (data) => {
-    data.forEach((p) => {
+    data.recieverIds.forEach((p) => {
       const receiverSocketId = userSocketMap[p];
       if (receiverSocketId) {
-        socket.to(receiverSocketId).emit("typing", true);
+        socket.to(receiverSocketId).emit("typing", data);
       }
     });
   });
 
   socket.on("stopTyping", (data) => {
-    data.forEach((p) => {
+    data.recieverIds.forEach((p) => {
       const receiverSocketId = userSocketMap[p];
       if (receiverSocketId) {
-        socket.to(receiverSocketId).emit("stopTyping", false);
+        socket.to(receiverSocketId).emit("stopTyping", data);
       }
     });
   });
@@ -83,12 +83,10 @@ io.on("connection", (socket) => {
     participants.forEach((p) => {
       const receiverSocketId = userSocketMap[p.userId];
       if (receiverSocketId) {
-        socket
-          .to(receiverSocketId)
-          .emit("reactionUpdated", {
-            messageId: data?.messageId,
-            updatedReactions: data?.updatedReactions,
-          });
+        socket.to(receiverSocketId).emit("reactionUpdated", {
+          messageId: data?.messageId,
+          updatedReactions: data?.updatedReactions,
+        });
       }
     });
   });
